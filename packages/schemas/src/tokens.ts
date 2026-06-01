@@ -135,6 +135,26 @@ export function formatTokenAmount(
   return negative ? `-${out}` : out
 }
 
+/**
+ * Canonical wire money: raw wei integer string → decimal string.
+ * No thousands separators, no rounding, full token precision, trailing zeros
+ * trimmed, never empty (`'0'`). Preserves a leading `-` (net amounts can be
+ * negative). This is the machine contract value — the frontend formats it for
+ * display; do NOT round or group here.
+ */
+export function toTokenDecimalString(rawWei: string, decimals: number): string {
+  if (!rawWei) return '0'
+  const negative = rawWei.startsWith('-')
+  const digits = negative ? rawWei.slice(1) : rawWei
+  if (!/^\d+$/.test(digits)) return '0'
+  const padded = digits.padStart(decimals + 1, '0')
+  const intPart = padded.slice(0, padded.length - decimals).replace(/^0+(?=\d)/, '')
+  const fracPart = padded.slice(padded.length - decimals).replace(/0+$/, '')
+  const out = fracPart ? `${intPart}.${fracPart}` : intPart
+  if (out === '0') return '0'
+  return negative ? `-${out}` : out
+}
+
 export function tokenSymbolOrFallback(chain: string, address: string): string {
   return lookupToken(chain, address)?.symbol ?? `${address.slice(0, 6)}…`
 }
