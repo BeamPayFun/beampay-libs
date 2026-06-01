@@ -1,7 +1,5 @@
 import { z } from 'zod'
 
-export const DashChainSchema = z.string().min(1)
-
 // ─────────────────────────────────────────────────────────────────────────────
 // Scope — the single source of truth for the mainnet/testnet ↔ chain mapping.
 // cron filters its read model by this; api validates/forwards it; web derives it
@@ -14,6 +12,13 @@ export const SCOPE_CHAINS: Record<DashboardScope, readonly string[]> = {
   mainnet: ['bsc', 'ethereum'],
   testnet: ['bsc-testnet'],
 }
+
+// Single source of truth for every dashboard chain id — derived from SCOPE_CHAINS,
+// never a second hardcoded list. Downstream services import this instead of
+// redefining their own chain enum (realizes the "no hardcoded chain lists" rule).
+export const KNOWN_DASH_CHAINS = Object.values(SCOPE_CHAINS).flat() as [string, ...string[]]
+
+export const DashChainSchema = z.enum(KNOWN_DASH_CHAINS)
 
 export function chainsForScope(scope: DashboardScope): readonly string[] {
   return SCOPE_CHAINS[scope]
@@ -228,12 +233,28 @@ export const DashboardOverviewSchema = z
   })
   .strict()
 
+// Per-status totals for the order list, computed server-side over the full
+// scope+q+range filter set (independent of the selected status chip). Mandatory —
+// pagination means the client sees one page only, so chip badge counts cannot be
+// derived client-side. `all` = sum of the five buckets.
+export const OrderStatusCountsSchema = z
+  .object({
+    all: z.number().int().nonnegative(),
+    pending: z.number().int().nonnegative(),
+    paid: z.number().int().nonnegative(),
+    partial: z.number().int().nonnegative(),
+    refunded: z.number().int().nonnegative(),
+    expired: z.number().int().nonnegative(),
+  })
+  .strict()
+
 export const OrderListResponseSchema = z
   .object({
     items: z.array(OrderRowSchema),
     total: z.number().int().nonnegative(),
     offset: z.number().int().nonnegative(),
     limit: z.number().int().positive(),
+    statusCounts: OrderStatusCountsSchema,
   })
   .strict()
 
@@ -252,4 +273,5 @@ export type MerchantTokenStat = z.infer<typeof MerchantTokenStatSchema>
 export type MerchantEvent = z.infer<typeof MerchantEventSchema>
 export type MerchantStats = z.infer<typeof MerchantStatsSchema>
 export type DashboardOverview = z.infer<typeof DashboardOverviewSchema>
+export type OrderStatusCounts = z.infer<typeof OrderStatusCountsSchema>
 export type OrderListResponse = z.infer<typeof OrderListResponseSchema>
