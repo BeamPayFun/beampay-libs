@@ -2,6 +2,27 @@ import { z } from 'zod'
 
 export const DashChainSchema = z.string().min(1)
 
+// ─────────────────────────────────────────────────────────────────────────────
+// Scope — the single source of truth for the mainnet/testnet ↔ chain mapping.
+// cron filters its read model by this; api validates/forwards it; web derives it
+// from the network selector. No downstream service may hardcode chain lists.
+// ─────────────────────────────────────────────────────────────────────────────
+export const DashboardScopeSchema = z.enum(['mainnet', 'testnet'])
+export type DashboardScope = z.infer<typeof DashboardScopeSchema>
+
+export const SCOPE_CHAINS: Record<DashboardScope, readonly string[]> = {
+  mainnet: ['bsc', 'ethereum'],
+  testnet: ['bsc-testnet'],
+}
+
+export function chainsForScope(scope: DashboardScope): readonly string[] {
+  return SCOPE_CHAINS[scope]
+}
+
+export function scopeForChain(chain: string): DashboardScope {
+  return chain === 'bsc-testnet' ? 'testnet' : 'mainnet'
+}
+
 export const KpiEntrySchema = z
   .object({
     value: z.string(),
@@ -37,21 +58,85 @@ export const SeriesEntrySchema = z
 
 export const OrderRowStatusSchema = z.enum(['paid', 'partial', 'refunded', 'expired', 'pending'])
 
+// ─────────────────────────────────────────────────────────────────────────────
+// Order list row — canonical machine values only. All money is a canonical
+// decimal string (no commas, no rounding, full precision); timestamps are unix
+// seconds. The frontend owns every display transform (ellipsize, relative age,
+// $/% formatting).
+// ─────────────────────────────────────────────────────────────────────────────
 export const OrderRowSchema = z
   .object({
-    id: z.string(),
     /** Full 32-byte order key (0x + 64 hex) — needed for on-chain refund calls. */
     orderId: z.string(),
-    short: z.string(),
     chain: DashChainSchema,
-    token: z.string(),
+    tokenAddress: z.string(),
+    tokenSymbol: z.string(),
+    tokenDecimals: z.number().int().nonnegative(),
+    /** requested amount, canonical decimal */
     amount: z.string(),
+    /** canonical decimal */
+    paidAmount: z.string(),
+    /** canonical decimal */
+    refundedAmount: z.string(),
+    /** max(0, paid - refunded), canonical decimal */
+    refundableAmount: z.string(),
+    /** full address */
     payer: z.string(),
     status: OrderRowStatusSchema,
-    age: z.string(),
-    ageH: z.number(),
+    /** paid-time USD snapshot of one token unit, canonical decimal */
     priceUsd: z.string(),
+    /** unix seconds */
+    createdAt: z.number().int().nonnegative(),
+    /** unix seconds, 0 if unpaid */
+    paidAt: z.number().int().nonnegative(),
+  })
+  .strict()
+
+export const RefundEventSchema = z
+  .object({
+    chain: DashChainSchema,
+    /** canonical decimal */
+    amount: z.string(),
+    tokenAddress: z.string(),
+    tokenSymbol: z.string(),
+    tokenDecimals: z.number().int().nonnegative(),
+    txHash: z.string(),
+    logIndex: z.number().int().nonnegative(),
+    /** unix seconds */
+    blockTime: z.number().int().nonnegative(),
+    /** refund-event USD snapshot of one token unit, canonical decimal */
+    priceUsd: z.string(),
+  })
+  .strict()
+
+export const OrderDetailSchema = z
+  .object({
+    orderId: z.string(),
+    chain: DashChainSchema,
+    merchant: z.string(),
+    payer: z.string(),
+    receiver: z.string(),
+    /** BeamPayRouter address for this chain */
+    router: z.string(),
+    tokenAddress: z.string(),
+    tokenSymbol: z.string(),
+    tokenDecimals: z.number().int().nonnegative(),
+    amount: z.string(),
+    paidAmount: z.string(),
     refundedAmount: z.string(),
+    refundableAmount: z.string(),
+    /** paid-time USD snapshot (refundable USD basis), canonical decimal */
+    priceUsd: z.string(),
+    status: OrderRowStatusSchema,
+    /** unix seconds */
+    createdAt: z.number().int().nonnegative(),
+    /** unix seconds, 0 if unpaid */
+    paidAt: z.number().int().nonnegative(),
+    /** unix seconds */
+    expiresAt: z.number().int().nonnegative(),
+    payTxHash: z.string(),
+    /** newest-first */
+    refundEvents: z.array(RefundEventSchema),
   })
   .strict()
 
@@ -77,11 +162,19 @@ export const MerchantStatsTotalsSchema = z
 
 export const MerchantTokenStatSchema = z
   .object({
-    sym: z.string(),
+    tokenSymbol: z.string(),
+    tokenAddress: z.string(),
+    tokenDecimals: z.number().int().nonnegative(),
     chain: DashChainSchema,
-    revenue: z.string(),
-    refunds: z.string(),
-    net: z.string(),
+    /** canonical decimal token amount */
+    revenueQty: z.string(),
+    refundsQty: z.string(),
+    /** signed canonical decimal */
+    netQty: z.string(),
+    /** canonical numeric (no commas) */
+    revenueUsd: z.string(),
+    refundsUsd: z.string(),
+    netUsd: z.string(),
     payCount: z.number().int().nonnegative(),
     refundCount: z.number().int().nonnegative(),
   })
@@ -138,8 +231,9 @@ export const DashboardOverviewSchema = z
 export const OrderListResponseSchema = z
   .object({
     items: z.array(OrderRowSchema),
-    nextCursor: z.string().nullable(),
     total: z.number().int().nonnegative(),
+    offset: z.number().int().nonnegative(),
+    limit: z.number().int().positive(),
   })
   .strict()
 
@@ -149,6 +243,8 @@ export type ChainSplitEntry = z.infer<typeof ChainSplitEntrySchema>
 export type SeriesEntry = z.infer<typeof SeriesEntrySchema>
 export type OrderRowStatus = z.infer<typeof OrderRowStatusSchema>
 export type OrderRow = z.infer<typeof OrderRowSchema>
+export type RefundEvent = z.infer<typeof RefundEventSchema>
+export type OrderDetail = z.infer<typeof OrderDetailSchema>
 export type Balance = z.infer<typeof BalanceSchema>
 export type DashKpiSet = z.infer<typeof DashKpiSetSchema>
 export type MerchantStatsTotals = z.infer<typeof MerchantStatsTotalsSchema>
