@@ -1,5 +1,13 @@
 # @beampay/schemas
 
+## 0.6.0
+
+### Minor Changes
+
+- dashboard: add `orderId` (full 32-byte order key) to `OrderRowSchema`
+
+  The dashboard order wire previously carried only the abbreviated `short` key and a derived `id`. Adding the full `orderId` lets the merchant dashboard execute on-chain refunds (`refund(orderId, amount)`) directly from an order row without the operator re-pasting the key.
+
 ## 0.5.0
 
 ### Minor Changes
