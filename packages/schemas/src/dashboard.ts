@@ -40,6 +40,8 @@ export const OrderRowStatusSchema = z.enum(['paid', 'partial', 'refunded', 'expi
 export const OrderRowSchema = z
   .object({
     id: z.string(),
+    /** Full 32-byte order key (0x + 64 hex) — needed for on-chain refund calls. */
+    orderId: z.string(),
     short: z.string(),
     chain: DashChainSchema,
     token: z.string(),
