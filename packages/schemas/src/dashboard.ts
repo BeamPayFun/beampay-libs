@@ -35,7 +35,7 @@ export const SeriesEntrySchema = z
   })
   .strict()
 
-export const OrderRowStatusSchema = z.enum(['paid', 'refunded', 'expired', 'pending'])
+export const OrderRowStatusSchema = z.enum(['paid', 'partial', 'refunded', 'expired', 'pending'])
 
 export const OrderRowSchema = z
   .object({
@@ -48,6 +48,8 @@ export const OrderRowSchema = z
     status: OrderRowStatusSchema,
     age: z.string(),
     ageH: z.number(),
+    priceUsd: z.string(),
+    refundedAmount: z.string(),
   })
   .strict()
 
