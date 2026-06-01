@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest'
 import {
+  DashChainSchema,
   DashboardScopeSchema,
+  KNOWN_DASH_CHAINS,
   OrderDetailSchema,
   OrderListResponseSchema,
   OrderRowSchema,
@@ -61,14 +63,35 @@ describe('OrderRowSchema (canonical contract)', () => {
 })
 
 describe('OrderListResponseSchema (offset pagination)', () => {
-  it('accepts offset/total/limit and no cursor', () => {
-    const res = { items: [], total: 0, offset: 0, limit: 20 }
+  const statusCounts = { all: 0, pending: 0, paid: 0, partial: 0, refunded: 0, expired: 0 }
+
+  it('accepts offset/total/limit + statusCounts and no cursor', () => {
+    const res = { items: [], total: 0, offset: 0, limit: 20, statusCounts }
     expect(OrderListResponseSchema.safeParse(res).success).toBe(true)
   })
 
-  it('rejects a legacy nextCursor field', () => {
-    const res = { items: [], total: 0, offset: 0, limit: 20, nextCursor: null }
+  it('rejects a missing statusCounts (mandatory)', () => {
+    const res = { items: [], total: 0, offset: 0, limit: 20 }
     expect(OrderListResponseSchema.safeParse(res).success).toBe(false)
+  })
+
+  it('rejects a legacy nextCursor field', () => {
+    const res = { items: [], total: 0, offset: 0, limit: 20, statusCounts, nextCursor: null }
+    expect(OrderListResponseSchema.safeParse(res).success).toBe(false)
+  })
+})
+
+describe('DashChainSchema (tightened to KNOWN_DASH_CHAINS)', () => {
+  it('derives the chain set from SCOPE_CHAINS', () => {
+    expect(KNOWN_DASH_CHAINS).toEqual(['bsc', 'ethereum', 'bsc-testnet'])
+  })
+
+  it('accepts known chains, rejects unknown', () => {
+    expect(DashChainSchema.safeParse('bsc').success).toBe(true)
+    expect(DashChainSchema.safeParse('ethereum').success).toBe(true)
+    expect(DashChainSchema.safeParse('bsc-testnet').success).toBe(true)
+    expect(DashChainSchema.safeParse('polygon').success).toBe(false)
+    expect(DashChainSchema.safeParse('').success).toBe(false)
   })
 })
 
