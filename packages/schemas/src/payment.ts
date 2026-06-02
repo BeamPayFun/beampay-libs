@@ -1,22 +1,5 @@
 import { z } from 'zod'
 import { ChainSchema } from './chain.js'
-import { OrderKeySchema } from './orderKey.js'
-
-export const GetOrderQuerySchema = z.object({
-  chain: ChainSchema,
-  orderKey: OrderKeySchema,
-})
-
-export const OrderResponseSchema = z.object({
-  chain: ChainSchema,
-  orderKey: OrderKeySchema,
-  amount: z.string(),
-  token: z.string(),
-  merchant: z.string(),
-  receiver: z.string(),
-  payer: z.string().nullable(),
-  status: z.enum(['pending', 'paid', 'refunded']),
-})
 
 export const CreateOrderBodySchema = z.object({
   chain: ChainSchema,
@@ -26,6 +9,4 @@ export const CreateOrderBodySchema = z.object({
   amount: z.string().regex(/^\d+$/),
 })
 
-export type GetOrderQuery = z.infer<typeof GetOrderQuerySchema>
-export type OrderResponse = z.infer<typeof OrderResponseSchema>
 export type CreateOrderBody = z.infer<typeof CreateOrderBodySchema>

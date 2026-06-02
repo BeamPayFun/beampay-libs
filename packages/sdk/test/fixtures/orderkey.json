@@ -1,16 +1,20 @@
 [
   {
+    "chainId": 56,
     "merchant": "0x1111111111111111111111111111111111111111",
-    "token": "0x2222222222222222222222222222222222222222",
-    "amount": "1000000000000000000",
-    "salt": "0x0000000000000000000000000000000000000000000000000000000000000001",
-    "expectedOrderKey": "0x1330dfb560ac9c23af0105753e65a70783d001c4bc9ed0ecf6dbb35531782c09"
+    "orderId": "0x0000000000000000000000000000000000000000000000000000000000000001",
+    "expectedOrderKey": "0x268962484e8fecf04224278bbe7e035b5af1da68ea29ff74c7d1e1799f842c8d"
   },
   {
+    "chainId": 1,
     "merchant": "0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
-    "token": "0xbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
-    "amount": "5000",
-    "salt": "0xdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef",
-    "expectedOrderKey": "0xac9e1e587017cf60047f392c1403e1c3f6427d746cdddf87aae4accf9fc56a0c"
+    "orderId": "0xdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef",
+    "expectedOrderKey": "0x8273680f215f53ea137c22deb6081c5aa3787078990102cec2d1802d0f028d0c"
+  },
+  {
+    "chainId": 97,
+    "merchant": "0x2222222222222222222222222222222222222222",
+    "orderId": "0x00000000000000000000000000000000000000000000000000000000000000ff",
+    "expectedOrderKey": "0x1a3601701686ec329197813de068452f0d80f7aab25a57f09c639480eacd0f80"
   }
 ]
