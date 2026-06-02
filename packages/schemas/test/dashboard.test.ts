@@ -6,6 +6,7 @@ import {
   OrderDetailSchema,
   OrderListResponseSchema,
   OrderRowSchema,
+  RefundListResponseSchema,
   chainsForScope,
   scopeForChain,
 } from '../src/dashboard'
@@ -33,6 +34,7 @@ describe('scope mapping', () => {
 
 describe('OrderRowSchema (canonical contract)', () => {
   const row = {
+    orderKey: `0x${'cd'.repeat(32)}`,
     orderId: `0x${'ab'.repeat(32)}`,
     chain: 'bsc',
     tokenAddress: '0x55d398326f99059ff775485246999027b3197955',
@@ -96,41 +98,54 @@ describe('DashChainSchema (tightened to KNOWN_DASH_CHAINS)', () => {
 })
 
 describe('OrderDetailSchema', () => {
-  it('requires refundEvents array + detail-only fields', () => {
-    const detail = {
-      orderId: `0x${'ab'.repeat(32)}`,
-      chain: 'bsc',
-      merchant: '0x2222222222222222222222222222222222222222',
-      payer: '0x1111111111111111111111111111111111111111',
-      receiver: '0x2222222222222222222222222222222222222222',
-      router: '0x3333333333333333333333333333333333333333',
-      tokenAddress: '0x55d398326f99059ff775485246999027b3197955',
-      tokenSymbol: 'USDT',
-      tokenDecimals: 18,
-      amount: '49.5',
-      paidAmount: '49.5',
-      refundedAmount: '0.225',
-      refundableAmount: '49.275',
-      priceUsd: '1',
-      status: 'partial' as const,
-      createdAt: 1_717_000_000,
-      paidAt: 1_717_000_100,
-      expiresAt: 1_717_003_600,
-      payTxHash: `0x${'cd'.repeat(32)}`,
-      refundEvents: [
-        {
-          chain: 'bsc',
-          amount: '0.225',
-          tokenAddress: '0x55d398326f99059ff775485246999027b3197955',
-          tokenSymbol: 'USDT',
-          tokenDecimals: 18,
-          txHash: `0x${'ef'.repeat(32)}`,
-          logIndex: 3,
-          blockTime: 1_717_000_200,
-          priceUsd: '1',
-        },
-      ],
-    }
+  const detail = {
+    orderKey: `0x${'cd'.repeat(32)}`,
+    orderId: `0x${'ab'.repeat(32)}`,
+    chain: 'bsc',
+    merchant: '0x2222222222222222222222222222222222222222',
+    payer: '0x1111111111111111111111111111111111111111',
+    receiver: '0x2222222222222222222222222222222222222222',
+    router: '0x3333333333333333333333333333333333333333',
+    tokenAddress: '0x55d398326f99059ff775485246999027b3197955',
+    tokenSymbol: 'USDT',
+    tokenDecimals: 18,
+    amount: '49.5',
+    paidAmount: '49.5',
+    refundedAmount: '0.225',
+    refundableAmount: '49.275',
+    priceUsd: '1',
+    status: 'partial' as const,
+    createdAt: 1_717_000_000,
+    paidAt: 1_717_000_100,
+    expiresAt: 1_717_003_600,
+    payTxHash: `0x${'cd'.repeat(32)}`,
+  }
+
+  it('accepts detail-only fields without refundEvents', () => {
     expect(OrderDetailSchema.safeParse(detail).success).toBe(true)
+  })
+
+  it('rejects a stray refundEvents field (split to /refunds endpoint)', () => {
+    expect(OrderDetailSchema.safeParse({ ...detail, refundEvents: [] }).success).toBe(false)
+  })
+})
+
+describe('RefundListResponseSchema', () => {
+  it('accepts an array of refund events', () => {
+    const refunds = [
+      {
+        chain: 'bsc',
+        amount: '0.225',
+        tokenAddress: '0x55d398326f99059ff775485246999027b3197955',
+        tokenSymbol: 'USDT',
+        tokenDecimals: 18,
+        txHash: `0x${'ef'.repeat(32)}`,
+        logIndex: 3,
+        blockTime: 1_717_000_200,
+        priceUsd: '1',
+      },
+    ]
+    expect(RefundListResponseSchema.safeParse(refunds).success).toBe(true)
+    expect(RefundListResponseSchema.safeParse([]).success).toBe(true)
   })
 })

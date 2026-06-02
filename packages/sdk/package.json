@@ -1,6 +1,6 @@
 {
   "name": "@beampay/sdk",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "description": "Merchant SDK for BeamPay — typed router calls, webhook verification, signature helpers",
   "license": "MIT",
   "type": "module",
@@ -12,7 +12,10 @@
       "types": "./dist/index.d.ts"
     }
   },
-  "files": ["dist", "README.md"],
+  "files": [
+    "dist",
+    "README.md"
+  ],
   "publishConfig": {
     "access": "public",
     "registry": "https://registry.npmjs.org/"

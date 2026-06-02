@@ -71,7 +71,15 @@ export const OrderRowStatusSchema = z.enum(['paid', 'partial', 'refunded', 'expi
 // ─────────────────────────────────────────────────────────────────────────────
 export const OrderRowSchema = z
   .object({
-    /** Full 32-byte order key (0x + 64 hex) — needed for on-chain refund calls. */
+    /**
+     * Global unique order key (0x + 64 hex) = keccak256(abi.encode(chainId, merchant, orderId)).
+     * REST resource key + order↔refund join key. Derived by cron, never on-chain.
+     */
+    orderKey: z.string(),
+    /**
+     * Contract event orderId (merchant-chosen bytes32) — the on-chain pay/refund
+     * call parameter. Unique per (merchant, chain), not globally.
+     */
     orderId: z.string(),
     chain: DashChainSchema,
     tokenAddress: z.string(),
@@ -116,6 +124,9 @@ export const RefundEventSchema = z
 
 export const OrderDetailSchema = z
   .object({
+    /** Global unique order key — REST resource key. See OrderRowSchema. */
+    orderKey: z.string(),
+    /** Contract event orderId — on-chain pay/refund parameter. See OrderRowSchema. */
     orderId: z.string(),
     chain: DashChainSchema,
     merchant: z.string(),
@@ -140,10 +151,12 @@ export const OrderDetailSchema = z
     /** unix seconds */
     expiresAt: z.number().int().nonnegative(),
     payTxHash: z.string(),
-    /** newest-first */
-    refundEvents: z.array(RefundEventSchema),
   })
   .strict()
+
+// Refunds list response for GET /v1/orders/:orderKey/refunds (newest-first).
+// Split out of OrderDetail — the detail view + refunds are fetched separately.
+export const RefundListResponseSchema = z.array(RefundEventSchema)
 
 export const BalanceSchema = z
   .object({
@@ -266,6 +279,7 @@ export type OrderRowStatus = z.infer<typeof OrderRowStatusSchema>
 export type OrderRow = z.infer<typeof OrderRowSchema>
 export type RefundEvent = z.infer<typeof RefundEventSchema>
 export type OrderDetail = z.infer<typeof OrderDetailSchema>
+export type RefundListResponse = z.infer<typeof RefundListResponseSchema>
 export type Balance = z.infer<typeof BalanceSchema>
 export type DashKpiSet = z.infer<typeof DashKpiSetSchema>
 export type MerchantStatsTotals = z.infer<typeof MerchantStatsTotalsSchema>

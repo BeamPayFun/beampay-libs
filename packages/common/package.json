@@ -1,6 +1,6 @@
 {
   "name": "@beampay/common",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Shared error codes, BaseResponse, signature helpers, and chain metadata for BeamPay",
   "license": "MIT",
   "type": "module",
@@ -12,7 +12,10 @@
       "types": "./dist/index.d.ts"
     }
   },
-  "files": ["dist", "README.md"],
+  "files": [
+    "dist",
+    "README.md"
+  ],
   "publishConfig": {
     "access": "public",
     "registry": "https://registry.npmjs.org/"
