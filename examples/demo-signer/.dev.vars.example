@@ -1,0 +1,4 @@
+# Demo merchant signing key — BSC testnet burner, self-hosted, BeamPay holds zero keys.
+# Local dev: copy this file to .dev.vars and fill a burner key.
+# Deploy:    wrangler secret put MERCHANT_KEY
+MERCHANT_KEY=0x0000000000000000000000000000000000000000000000000000000000000000

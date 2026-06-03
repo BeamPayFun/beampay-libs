@@ -1,0 +1,25 @@
+{
+  "name": "@beampay/demo-signer",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Reference self-hosted merchant signer (Cloudflare Worker) for the BeamPay checkout demo",
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@beampay/contracts-abi": "workspace:*",
+    "@beampay/schemas": "workspace:*",
+    "@beampay/signer": "workspace:*",
+    "hono": "^4.6.0",
+    "viem": "^2.21.0",
+    "zod": "^3.23.0"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20241127.0",
+    "typescript": "^5.7.2",
+    "wrangler": "^3.90.0"
+  }
+}
