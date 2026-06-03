@@ -107,6 +107,31 @@ importers:
         specifier: ^2.1.8
         version: 2.1.9(@types/node@22.19.19)
 
+  packages/signer:
+    dependencies:
+      '@beampay/contracts-abi':
+        specifier: workspace:*
+        version: link:../contracts-abi
+      '@beampay/schemas':
+        specifier: workspace:*
+        version: link:../schemas
+    devDependencies:
+      tsup:
+        specifier: ^8.3.5
+        version: 8.5.1(postcss@8.5.15)(typescript@5.9.3)
+      typescript:
+        specifier: ^5.7.2
+        version: 5.9.3
+      viem:
+        specifier: ^2.21.0
+        version: 2.50.4(typescript@5.9.3)(zod@3.25.76)
+      vitest:
+        specifier: ^2.1.8
+        version: 2.1.9(@types/node@22.19.19)
+      zod:
+        specifier: ^3.23.0
+        version: 3.25.76
+
 packages:
 
   '@adraffy/ens-normalize@1.11.1':
