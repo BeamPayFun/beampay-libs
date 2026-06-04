@@ -3,6 +3,11 @@ main = "src/index.ts"
 compatibility_date = "2024-11-27"
 compatibility_flags = ["nodejs_compat"]
 
+# Custom domain — provisions DNS + cert on the beampay.fun zone (same CF account).
+[[routes]]
+pattern = "demo-signer.beampay.fun"
+custom_domain = true
+
 # MERCHANT_SIGNER_PRIVATE_KEY is a secret — never set here.
 #   local:  copy .dev.vars.example → .dev.vars
 #   deploy: wrangler secret put MERCHANT_SIGNER_PRIVATE_KEY
