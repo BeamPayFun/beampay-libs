@@ -1,10 +1,10 @@
 import { BEAMPAY_ROUTER_ADDRESSES } from '@beampay/contracts-abi'
 import {
-  buildOrderTypedData,
   CHAIN_IDS,
   type ChainKey,
   type OrderEnvelope,
   OrderEnvelopeSchema,
+  buildOrderTypedData,
 } from '@beampay/schemas'
 import { privateKeyToAccount } from 'viem/accounts'
 
