@@ -2,7 +2,6 @@ import { newOrderId, signOrder } from '@beampay/signer'
 import { Hono } from 'hono'
 import { cors } from 'hono/cors'
 import { isAddress } from 'viem'
-import { privateKeyToAccount } from 'viem/accounts'
 import { z } from 'zod'
 
 /**
@@ -22,18 +21,18 @@ const TTL_SECONDS = 3600 // short TTL bounds a leaked hot-key blast radius
 
 const addr = z.string().refine((s): s is `0x${string}` => isAddress(s), 'invalid address')
 
-// The merchant's own frontend supplies the order fields; any omitted field
-// falls back to a server default (merchant/receiver = this signer's address,
-// token = the demo store token, fresh orderId, now + TTL). NOTE: this signs
-// whatever amount/receiver the caller sends — acceptable for a testnet demo
-// with a burner key, but a PRODUCTION signer MUST authenticate the caller and
-// validate the price/receiver before signing.
+// The merchant's own frontend supplies the order fields. amount + merchant +
+// receiver are required; the rest fall back to a server default (token = the
+// demo store token, fresh orderId, now + TTL). NOTE: this signs whatever
+// amount/receiver the caller sends — acceptable for a testnet demo with a
+// burner key, but a PRODUCTION signer MUST authenticate the caller and validate
+// the price/receiver before signing.
 const SignSchema = z
   .object({
     amount: z.string().regex(/^\d+$/, 'amount must be a wei string'),
+    merchant: addr,
+    receiver: addr,
     token: addr.optional(),
-    merchant: addr.optional(),
-    receiver: addr.optional(),
     orderId: z
       .string()
       .regex(/^0x[0-9a-fA-F]{64}$/, 'orderId must be bytes32 hex')
@@ -73,10 +72,6 @@ app.post('/sign', async (c) => {
   const key = c.env.MERCHANT_SIGNER_PRIVATE_KEY as `0x${string}` | undefined
   if (!key) return c.json(body('500', 'signer not configured'), 500)
 
-  // Defaults: merchant/receiver fall back to this signer's own address.
-  const signer = privateKeyToAccount(key).address
-  const merchant = p.merchant ?? signer
-  const receiver = p.receiver ?? merchant
   const now = Math.floor(Date.now() / 1000)
   const createdAt = p.createdAt ?? now
   const expiresAt = p.expiresAt ?? createdAt + TTL_SECONDS
@@ -84,8 +79,8 @@ app.post('/sign', async (c) => {
   const envelope = await signOrder({
     privateKey: key,
     chain: CHAIN,
-    merchant,
-    receiver,
+    merchant: p.merchant,
+    receiver: p.receiver,
     token: p.token ?? DEFAULT_TOKEN,
     amount: p.amount,
     orderId: (p.orderId as `0x${string}` | undefined) ?? newOrderId(),

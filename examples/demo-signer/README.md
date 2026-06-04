@@ -12,10 +12,10 @@ Both endpoints return the unified BeamPay envelope `{ code, msg, data, timestamp
 (matches `beampay-api`; `code: "000000000"` = success, `data` holds the payload).
 
 - `GET /health` → `{ "code": "000000000", "msg": "ok", "data": { "ok": true }, "timestamp": … }`
-- `POST /sign` body `{ "amount": "4500000", "token"?, "merchant"?, "receiver"?, "orderId"?, "createdAt"?, "expiresAt"?, "feeBps"?, "memo"? }`
-  → `data` is a validated `OrderEnvelope`. Only `amount` (wei string) is required; any omitted
-  field falls back to a server default (`merchant`/`receiver` = this signer's own address,
-  `token` = the demo store token, fresh `orderId`, `now + TTL`).
+- `POST /sign` body `{ "amount": "4500000", "merchant": "0x…", "receiver": "0x…", "token"?, "orderId"?, "createdAt"?, "expiresAt"?, "feeBps"?, "memo"? }`
+  → `data` is a validated `OrderEnvelope`. `amount` (wei string), `merchant` and `receiver` are
+  required; the rest fall back to a server default (`token` = the demo store token,
+  fresh `orderId`, `now + TTL`).
   Failures return a non-`000000000` `code` (`"400"` invalid order, `"500"` signer misconfigured) with `data: null`.
   **Demo only:** it signs whatever the caller sends — a production signer MUST authenticate the
   caller and validate the amount/receiver before signing.
@@ -25,7 +25,8 @@ Both endpoints return the unified BeamPay envelope `{ code, msg, data, timestamp
 ```bash
 cp .dev.vars.example .dev.vars      # then put a BSC-testnet burner key in MERCHANT_SIGNER_PRIVATE_KEY
 pnpm --filter @beampay/demo-signer dev
-curl -s localhost:8787/sign -H 'content-type: application/json' -d '{"amount":"4500000"}'
+curl -s localhost:8787/sign -H 'content-type: application/json' \
+  -d '{"amount":"4500000","merchant":"0xYourMerchantAddr","receiver":"0xYourMerchantAddr"}'
 ```
 
 ## Deploy
