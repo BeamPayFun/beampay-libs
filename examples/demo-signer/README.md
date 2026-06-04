@@ -8,14 +8,18 @@ One endpoint serves both flows:
 
 ## Endpoints
 
-- `GET /health` → `{ ok: true }`
-- `POST /sign` body `{ "items": { "mug": 1, "tee": 2 } }` → a validated `OrderEnvelope`.
+Both endpoints return the unified BeamPay envelope `{ code, msg, data, timestamp }`
+(matches `beampay-api`; `code: "000000000"` = success, `data` holds the payload).
+
+- `GET /health` → `{ "code": "000000000", "msg": "ok", "data": { "ok": true }, "timestamp": … }`
+- `POST /sign` body `{ "items": { "mug": 1, "tee": 2 } }` → `data` is a validated `OrderEnvelope`.
   Price catalog + `receiver` + `token` are **server-locked** (client prices are never trusted).
+  Failures return a non-`000000000` `code` (`"400"` bad cart, `"500"` signer misconfigured) with `data: null`.
 
 ## Run locally
 
 ```bash
-cp .dev.vars.example .dev.vars      # then put a BSC-testnet burner key in MERCHANT_KEY
+cp .dev.vars.example .dev.vars      # then put a BSC-testnet burner key in MERCHANT_SIGNER_PRIVATE_KEY
 pnpm --filter @beampay/demo-signer dev
 curl -s localhost:8787/sign -H 'content-type: application/json' -d '{"items":{"mug":1}}'
 ```
@@ -23,7 +27,7 @@ curl -s localhost:8787/sign -H 'content-type: application/json' -d '{"items":{"m
 ## Deploy
 
 ```bash
-wrangler secret put MERCHANT_KEY    # paste the burner key (never committed)
+wrangler secret put MERCHANT_SIGNER_PRIVATE_KEY    # paste the burner key (never committed)
 pnpm --filter @beampay/demo-signer deploy
 ```
 

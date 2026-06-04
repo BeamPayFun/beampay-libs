@@ -3,6 +3,6 @@ main = "src/index.ts"
 compatibility_date = "2024-11-27"
 compatibility_flags = ["nodejs_compat"]
 
-# MERCHANT_KEY is a secret — never set here.
+# MERCHANT_SIGNER_PRIVATE_KEY is a secret — never set here.
 #   local:  copy .dev.vars.example → .dev.vars
-#   deploy: wrangler secret put MERCHANT_KEY
+#   deploy: wrangler secret put MERCHANT_SIGNER_PRIVATE_KEY
