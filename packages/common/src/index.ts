@@ -1,5 +1,6 @@
 export * from './baseResponse'
 export * from './errorCode'
 export * from './signature'
+export * from './webhook-signature'
 export * from './chains'
 export * from './recvWindow'
