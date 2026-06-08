@@ -22,12 +22,32 @@
 2. Overwrite `src/BeamPayRouter.abi.json`
 3. Re-run `tsup` so the `as const` TS file is rebuilt
 
-## Signature protocol (byte-identical across services)
+## Two signature protocols — do not conflate
+
+There are **two unrelated** HMAC schemes. Mixing them (one shared secret signing
+both) was the cross-merchant webhook-forgery bug; they are now fully separate.
+
+### 1. Internal proxyAuth — `packages/common/src/signature.ts` (`ApiSignatureUtil`)
+
+First-party `beampay-api` ↔ `beampay-cron`, byte-identical to `beam-monitor`/`cf-api`.
+Shared secret `PROXY_AUTH_SALT` (renamed from `SIGNATURE_SALT`; value unchanged).
 
 1. Filter out `signature` key
 2. Sort keys lexicographically
 3. JSON-stringify non-string values
-4. Join as `k=v&` pairs
-5. HMAC-SHA256(data, secretKey) → hex
+4. HMAC-SHA256(`getSignatureStr(query)+getSignatureStr(body)`, `PROXY_AUTH_SALT`+salt) → **0x-hex**
 
-See `packages/common/src/signature.ts` for the canonical implementation.
+Auth fields (`timestamp/recvWindow/salt/signature`) ride **in the body**. This is
+also the shape of `OrderWebhookBodySchema` (the internal relay) — leave it intact.
+
+### 2. Merchant webhook — `packages/common/src/webhook-signature.ts` (Standard Webhooks)
+
+Per-merchant symmetric secret (`whsec_…`), one per merchant — no cross-merchant
+trust. Spec: https://www.standardwebhooks.com.
+
+- Signed content: `` `${webhookId}.${timestampSec}.${rawBody}` `` (UNIX **seconds**; exact transmitted bytes).
+- `signature = base64( HMAC-SHA256(secretBytes, signedContent) )` — **base64, not 0x-hex**.
+- Auth rides **in headers**: `webhook-id`, `webhook-timestamp`, `webhook-signature: v1,<b64> v1,<b64prev>` (space-separated, one per active secret → zero-downtime rotation).
+- `webhookId = ${chain}:${txHash}:${logIndex}` (globally unique + merchant idempotency key).
+- Body schema: `MerchantWebhookEventSchema` in `packages/schemas` (NO auth fields in body).
+- Merchant-side verify: `verifyWebhook(rawBody, headers, { secret, toleranceSec })` in `packages/sdk`.

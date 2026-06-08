@@ -1,5 +1,5 @@
 export { BeamPay, type AppType } from './client'
-export { verifyWebhook, type VerifyWebhookOptions } from './webhook'
+export { verifyWebhook, type VerifyWebhookOptions, type WebhookHeaders } from './webhook'
 export { deriveOrderId, deriveOrderKey } from './orderKey'
 export { CHAIN_METADATA } from './chains'
 export * from '@beampay/schemas'
